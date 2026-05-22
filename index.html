@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Ujian Online - Komputer dan Masyarakat</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --secondary-color: #3182ce;
+            --bg-color: #f7fafc;
+            --text-color: #2d3748;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Form Login */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        /* Header Ujian */
+        .exam-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #edf2f7;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        #timer {
+            color: #e53e3e;
+            font-size: 18px;
+        }
+
+        /* Soal */
+        .question-card {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        .question-text {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #edf2f7;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .option-label:hover {
+            background-color: #f7fafc;
+        }
+
+        .option-label input {
+            margin-right: 10px;
+        }
+
+        /* Hasil */
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .result-table td {
+            padding: 10px;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .result-table td:first-child {
+            font-weight: bold;
+            width: 30%;
+        }
+
+        .score-big {
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            color: #38a169;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- HALAMAN LOGIN -->
+        <div id="login-page">
+            <h1>Form Login Ujian Online</h1>
+            <p style="text-align: center; margin-bottom: 20px; color: #718096;">Materi: Komputer dan Masyarakat</p>
+            <form id="login-form" onsubmit="startExam(event)">
+                <div class="form-group">
+                    <label for="nama">Nama Lengkap</label>
+                    <input type="text" id="nama" required placeholder="Masukkan Nama">
+                </div>
+                <div class="form-group">
+                    <label for="nim">NIM</label>
+                    <input type="text" id="nim" required placeholder="Masukkan NIM">
+                </div>
+                <div class="form-group">
+                    <label for="kelas">Kelas</label>
+                    <input type="text" id="kelas" required placeholder="Masukkan Kelas">
+                </div>
+                <button type="submit">Mulai Ujian</button>
+            </form>
+        </div>
+
+        <!-- HALAMAN UJIAN -->
+        <div id="exam-page" class="hidden">
+            <div class="exam-header">
+                <div>Soal: <span id="current-question-count">0</span>/50</div>
+                <div id="timer">Sisa Waktu: 60:00</div>
+            </div>
+            
+            <div id="quiz-container">
+                <!-- Soal akan di-render di sini menggunakan JavaScript -->
+            </div>
+
+            <button type="button" onclick="submitExam()">Kirim Semua Jawaban</button>
+        </div>
+
+        <!-- HALAMAN HASIL -->
+        <div id="result-page" class="hidden">
+            <h2>Hasil Ujian</h2>
+            <table class="result-table">
+                <tr><td>Nama</td><td><span id="res-nama"></span></td></tr>
+                <tr><td>NIM</td><td><span id="res-nim"></span></td></tr>
+                <tr><td>Kelas</td><td><span id="res-kelas"></span></td></tr>
+                <tr><td>Benar</td><td><span id="res-benar"></span></td></tr>
+                <tr><td>Salah</td><td><span id="res-salah"></span></td></tr>
+                <tr><td>Kosong</td><td><span id="res-kosong"></span></td></tr>
+            </table>
+            <div class="score-big" id="res-skor">0</div>
+            <button onclick="window.location.reload()">Ujian Kembali</button>
+        </div>
+    </div>
+
+    <script>
+        // Bank Soal: 50 Soal Pilihan Ganda Komputer & Masyarakat
+        const questionBank = [
+            { q: "Apa yang dimaksud dengan Hak Kekayaan Intelektual (HKI) di bidang komputer?", a: "Hak eksklusif atas hasil ciptaan digital/software", b: "Hak menjual hardware komputer", c: "Hak merusak sistem orang lain", d: "Hak meretas jaringan tanpa izin", correct: "a" },
+            { q: "Perangkat lunak gratis yang dapat diunduh namun kode sumbernya tidak dibuka disebut...", a: "Freeware", b: "Open Source", c: "Shareware", d: "Adware", correct: "a" },
+            { q: "Kejahatan memanipulasi data psikologis seseorang agar memberikan informasi rahasia disebut...", a: "Social Engineering", b: "Phishing", c: "DDOS", d: "Malware", correct: "a" },
+            { q: "Undang-Undang di Indonesia yang mengatur tentang teknologi informasi dan transaksi elektronik adalah...", a: "UU ITE", b: "UU Pornografi", c: "UU Hak Cipta", d: "UU Keterbukaan Informasi", correct: "a" },
+            { q: "Berikut ini dampak positif komputer di bidang pendidikan, kecuali...", a: "Plagiarisme digital yang semakin mudah", b: "Akses e-learning jarak jauh", c: "Kemudahan mencari referensi ilmiah", d: "Ujian berbasis komputer (CBT)", correct: "a" },
+            { q: "Kesenjangan digital (Digital Divide) merujuk pada...", a: "Kesenjangan akses teknologi informasi antar wilayah/kelompok", b: "Perbedaan harga komputer Intel dan AMD", c: "Perbedaan kecepatan internet download dan upload", d: "Persaingan bisnis Apple dan Microsoft", correct: "a" },
+            { q: "Istilah untuk menggambarkan ketergantungan berlebih atau kecanduan terhadap internet adalah...", a: "Cyberaddiction", b: "Cyberstalking", c: "Cyberphobia", d: "Cyberloafing", correct: "a" },
+            { q: "Etika yang mengatur penggunaan teknologi dan komputer dalam masyarakat global dinamakan...", a: "Etika Komputer", b: "Hukum Internasional", c: "Netiket", d: "Sopan Santun", correct: "a" },
+            { q: "Karyawan yang menggunakan internet kantor pada jam kerja untuk keperluan pribadi non-pekerjaan disebut...", a: "Cyberloafing", b: "Cybercrime", c: "Hacking", d: "Whistleblowing", correct: "a" },
+            { q: "Tindakan mengirimkan email palsu yang menyerupai institusi resmi untuk mencuri password disebut...", a: "Phishing", b: "Spamming", c: "Carding", d: "Spoofing", correct: "a" },
+            { q: "Green Computing berfokus pada...", a: "Penggunaan komputer yang ramah lingkungan dan efisien energi", b: "Pengecatan casing komputer dengan warna hijau", c: "Pemasangan wallpaper alam di komputer", d: "Penjualan software pertanian saja", correct: "a" },
+            { q: "Apa nama lisensi publik yang sering digunakan untuk perangkat lunak Open Source?", a: "GNU GPL", b: "EULA", c: "Copyright", d: "Freeware License", correct: "a" },
+            { q: "Sistem otomasi pabrik menggantikan tenaga manusia dengan robot. Dampak sosial utamanya adalah...", a: "Pergeseran lapangan kerja dan potensi pengangguran struktural", b: "Komputer menjadi lebih murah", c: "Semua buruh otomatis jadi programmer", d: "Produksi pabrik melambat", correct: "a" },
+            { q: "Mengintip atau memantau aktivitas komputer orang lain secara diam-diam melalui jaringan disebut...", a: "Spying / Cyber-espionage", b: "Defacing", c: "Cracking", d: "Phishing", correct: "a" },
+            { q: "Program jahat yang mengunci data pengguna lalu meminta uang tebusan dikenal sebagai...", a: "Ransomware", b: "Spyware", c: "Trojan Horse", d: "Adware", correct: "a" },
+            { q: "Komputerisasi di bidang medis memicu perdebatan privasi karena...", a: "Rekam medis elektronik rentan bocor dan disalahgunakan", b: "Dokter tidak perlu lagi belajar biologi", c: "Harga obat-obatan menjadi naik", d: "Akurasi diagnosis menurun", correct: "a" },
+            { q: "Tindakan mengubah tampilan halaman depan suatu website secara ilegal disebut...", a: "Defacing", b: "Carding", c: "Phishing", d: "Denial of Service", correct: "a" },
+            { q: "Salah satu pilar utama 'Masyarakat Informasi' (Information Society) adalah...", a: "Informasi menjadi komoditas ekonomi utama", b: "Masyarakat menolak penggunaan ponsel pintar", c: "Seluruh buku fisik harus dibakar", d: "Biaya internet digratiskan total", correct: "a" },
+            { q: "Apa bahaya utama dari fenomena 'Hoax' di media sosial bagi masyarakat?", a: "Memicu konflik sosial dan disinformasi massal", b: "Mempercepat kuota internet habis", c: "Membuat baterai HP cepat rusak", d: "Menurunkan resolusi layar komputer", correct: "a" },
+            { q: "Hak pengguna untuk meminta data pribadinya dihapus dari mesin pencari internet diatur dalam prinsip...", a: "Right to be forgotten", b: "Right to copyright", c: "Right to information", d: "Right of access", correct: "a" },
+            { q: "Istilah E-Government mengacu pada...", a: "Pemberian layanan publik oleh pemerintah berbasis teknologi informasi", b: "Pemilihan umum presiden secara manual", c: "Sistem perdagangan saham online milik pemerintah", d: "Penjualan laptop bersubsidi oleh negara", correct: "a" },
+            { q: "Berikut ini merupakan contoh kejahatan siber (cybercrime) bermotif ekonomi, kecuali...", a: "Cyberterrorism untuk merusak fasilitas negara", b: "Carding (pencurian kartu kredit)", c: "Ransomware meminta tebusan bitcoin", d: "Penipuan toko online palsu", correct: "a" },
+            { q: "Kecerdasan buatan (AI) yang meniru kemampuan berpikir manusia memicu tantangan etika berupa...", a: "Transparansi keputusan algoritma dan bias data", b: "Hilangnya kebutuhan listrik", c: "Komputer yang tidak bisa dimatikan", d: "Penurunan harga memori RAM", correct: "a" },
+            { q: "Penggunaan hak kekayaan intelektual orang lain tanpa izin dan mengakuinya sebagai karya sendiri disebut...", a: "Plagiarisme", b: "Copyleft", c: "Fair Use", d: "Shareware", correct: "a" },
+            { q: "Organisasi nirlaba yang menyediakan lisensi gratis agar kreator bisa membagikan karyanya secara legal adalah...", a: "Creative Commons (CC)", b: "Microsoft", c: "W3C", d: "IEEE", correct: "a" },
+            { q: "Apa dampak negatif e-commerce terhadap pedagang pasar tradisional?", a: "Persaingan ketat jika tidak mengadopsi teknologi digital", b: "Barang tradisional otomatis dilarang pemerintah", c: "Pasar fisik ditutup paksa oleh server internet", d: "Pedagang pasar harus membeli lisensi Windows", correct: "a" },
+            { q: "Aktivitas mencuri data kartu kredit orang lain secara online untuk berbelanja disebut...", a: "Carding", b: "Phishing", c: "Defacing", d: "Cracking", correct: "a" },
+            { q: "Sifat dunia maya yang membuat pelaku kejahatan sulit diidentifikasi secara fisik disebut...", a: "Anonimitas (Anonymity)", b: "Virtualisasi", c: "Konektivitas", d: "Skalabilitas", correct: "a" },
+            { q: "Konsep pemanfaatan sensor dan internet pada barang sehari-hari (seperti lampu otomatis) disebut...", a: "Internet of Things (IoT)", b: "Cloud Computing", c: "Data Science", d: "Cyber Physical System", correct: "a" },
+            { q: "Penyebaran ujaran kebencian di internet dikenal dengan istilah...", a: "Hate Speech", b: "Cyberstalking", c: "Flaming", d: "Trolling", correct: "a" },
+            { q: "Komputer yang menyamar sebagai program berguna padahal membawa kode perusak dinamakan...", a: "Trojan Horse", b: "Worm", c: "Ransomware", d: "Adware", correct: "a" },
+            { q: "Dalam etika komputer, aturan 'Fair Use' mengizinkan kita menggunakan materi berhak cipta untuk keperluan...", a: "Pendidikan, kritik, dan ulasan non-komersial", b: "Dijual kembali dengan harga lebih murah", c: "Pembuatan produk komersial saingan", d: "Dihapus hak cipta aslinya", correct: "a" },
+            { q: "Berikut adalah ancaman privasi di era Big Data, kecuali...", a: "Enkripsi end-to-end pada pesan instan", b: "Pelacakan lokasi real-time oleh aplikasi", c: "Profil pengguna untuk iklan tertarget (targeted ads)", d: "Kebocoran database kredensial di cloud", correct: "a" },
+            { q: "Dampak psikologis negatif media sosial pada remaja yang selalu merasa tertinggal tren disebut...", a: "FOMO (Fear of Missing Out)", b: "Cyberphobia", c: "Technostress", d: "Digital Burnout", correct: "a" },
+            { q: "Badan internasional yang mengurusi standardisasi etika profesi teknologi informasi adalah...", a: "ACM dan IEEE", b: "WHO", c: "WTO", d: "FIFA", correct: "a" },
+            { q: "Istilah untuk kejahatan membobol sistem keamanan komputer dengan tujuan merusak/mencuri adalah...", a: "Cracking", b: "Ethical Hacking", c: "Cybernetics", d: "Data Mining", correct: "a" },
+            { q: "Penyimpanan data massal di server internet terpusat milik pihak ketiga dikenal dengan teknologi...", a: "Cloud Computing", b: "Local Storage", c: "Peer to Peer", d: "Mainframe", correct: "a" },
+            { q: "Aspek keamanan informasi yang memastikan data tidak diubah oleh pihak yang tidak berhak adalah...", a: "Integrity (Integritas)", b: "Confidentiality (Kerahasiaan)", c: "Availability (Ketersediaan)", d: "Non-repudiation", correct: "a" },
+            { q: "Aspek keamanan informasi yang memastikan data hanya dapat dibaca oleh orang yang berhak adalah...", a: "Confidentiality", b: "Integrity", c: "Availability", d: "Authenticity", correct: "a" },
+            { q: "Upaya membanjiri lalu lintas server target hingga tumbang dan tidak dapat diakses disebut...", a: "DDoS Attack", b: "SQL Injection", c: "Brute Force", d: "Cross-Site Scripting", correct: "a" },
+            { q: "Konsep kota cerdas yang mengintegrasikan teknologi informasi untuk efisiensi warga disebut...", a: "Smart City", b: "Cyber City", c: "Digital Township", d: "Metropolitan 4.0", correct: "a" },
+            { q: "Perangkat lunak uji coba yang diberikan gratis namun memiliki batas waktu penggunaan dinamakan...", a: "Shareware / Trial", b: "Adware", c: "Open Source", d: "Spyware", correct: "a" },
+            { q: "Teknologi pencatatan transaksi terdesentralisasi yang menjadi dasar mata uang kripto dinamakan...", a: "Blockchain", b: "Data Warehouse", c: "Cloud Storage", d: "Centralized Ledger", correct: "a" },
+            { q: "Penyakit fisik akibat stres/ketegangan karena interaksi konstan dengan teknologi komputer disebut...", a: "Technostress", b: "Cyber-sickness", c: "Carpal Tunnel Syndrome", d: "Digital Fatigue", correct: "a" },
+            { q: "Dokumen elektronik yang berfungsi sebagai alat bukti hukum sah di Indonesia diatur dalam...", a: "Pasal 5 UU ITE", b: "KUHP Lama", c: "UU Pers", d: "UU Hak Cipta", correct: "a" },
+            { q: "Tindakan memata-matai atau meneror seseorang secara online di media sosial dinamakan...", a: "Cyberstalking", b: "Cyberloafing", c: "Phishing", d: "Carding", correct: "a" },
+            { q: "Hacker yang menggunakan keahliannya untuk membantu meningkatkan keamanan sistem disebut...", a: "White Hat Hacker", b: "Black Hat Hacker", c: "Script Kiddie", d: "Hacktivist", correct: "a" },
+            { q: "Hacker yang meretas sistem komputer bermotif menyuarakan aksi politik atau sosial disebut...", a: "Hacktivist", b: "Cracker", c: "White Hat", d: "State-sponsored Hacker", correct: "a" },
+            { q: "Metode mengaburkan data teks asli menjadi kode rahasia agar aman saat dikirim disebut...", a: "Enkripsi", b: "Dekripsi", c: "Kompilasi", d: "Kompresi", correct: "a" },
+            { q: "Karakteristik utama Revolusi Industri 4.0 adalah kombinasi antara...", a: "Sistem Siber-Fisik, IoT, dan Kecerdasan Buatan", b: "Mesin uap dan kereta api", c: "Pabrik kimia dan listrik massal", d: "Komputer mainframe tanpa internet", correct: "a" }
+        ];
+
+        let userAnswers = {};
+        let timerInterval;
+        let timeRemaining = 60 * 60; // 60 Menit dalam detik
+
+        // Memulai Ujian setelah Login
+        function startExam(event) {
+            event.preventDefault();
+            
+            // Simpan identitas
+            const nama = document.getElementById('nama').value;
+            const nim = document.getElementById('nim').value;
+            const kelas = document.getElementById('kelas').value;
+
+            // Pindah halaman
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('exam-page').classList.remove('hidden');
+
+            // Render soal
+            renderQuestions();
+
+            // Mulai Timer
+            startTimer();
+        }
+
+        // Fungsi Render 50 Soal ke HTML
+        function renderQuestions() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+            document.getElementById('current-question-count').innerText = questionBank.length;
+
+            questionBank.forEach((item, index) => {
+                // Mengacak pilihan jawaban (A, B, C, D) agar posisi kunci 'a' berpindah secara acak
+                const options = [
+                    { key: 'a', text: item.a },
+                    { key: 'b', text: item.b },
+                    { key: 'c', text: item.c },
+                    { key: 'd', text: item.d }
+                ];
+                
+                // Algoritma acak sederhana (Fisher-Yates) khusus untuk pilihan jawaban saja
+                for (let i = options.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [options[i], options[j]] = [options[j], options[i]];
+                }
+
+                const questionCard = document.createElement('div');
+                questionCard.className = 'question-card';
+                
+                let optionsHTML = '';
+                options.forEach(opt => {
+                    optionsHTML += `
+                        <label class="option-label">
+                            <input type="radio" name="q${index}" value="${opt.key}" onclick="saveAnswer(${index}, '${opt.key}')">
+                            ${opt.text}
+                        </label>
+                    `;
+                });
+
+                questionCard.innerHTML = `
+                    <div class="question-text">${index + 1}. ${item.q}</div>
+                    <div class="options-container">
+                        ${optionsHTML}
+                    </div>
+                `;
+                container.appendChild(questionCard);
+            });
+        }
+
+        // Menyimpan Jawaban Sementara
+        function saveAnswer(questionIndex, selectedValue) {
+            userAnswers[questionIndex] = selectedValue;
+        }
+
+        // Timer Function
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let minutes = Math.floor(timeRemaining / 60);
+                let seconds = timeRemaining % 60;
+
+                minutes = minutes < 10 ? '0' + minutes : minutes;
+                seconds = seconds < 10 ? '0' + seconds : seconds;
+
+                document.getElementById('timer').innerText = `Sisa Waktu: ${minutes}:${seconds}`;
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Waktu habis! Ujian akan dikirim otomatis.");
+                    submitExam();
+                }
+            }, 1000);
+        }
+
+        // Koreksi dan Hitung Nilai
+        function submitExam() {
+            if (timeRemaining > 0) {
+                const konfirmasi = confirm("Apakah Anda yakin ingin menyelesaikan ujian dan mengirim semua jawaban?");
+                if (!konfirmasi) return;
+            }
+
+            clearInterval(timerInterval);
+
+            let benar = 0;
+            let salah = 0;
+            let kosong = 0;
+
+            questionBank.forEach((item, index) => {
+                if (userAnswers[index] === undefined) {
+                    kosong++;
+                } else if (userAnswers[index] === item.correct) {
+                    benar++;
+                } else {
+                    salah++;
+                }
+            });
+
+            // Hitung skor akhir skala 100 (Benar / Total Soal * 100)
+            let skorAkhir = (benar / questionBank.length) * 100;
+
+            // Isi data ke halaman hasil
+            document.getElementById('res-nama').innerText = document.getElementById('nama').value;
+            document.getElementById('res-nim').innerText = document.getElementById('nim').value;
+            document.getElementById('res-kelas').innerText = document.getElementById('kelas').value;
+            document.getElementById('res-benar').innerText = benar;
+            document.getElementById('res-salah').innerText = salah;
+            document.getElementById('res-kosong').innerText = kosong;
+            document.getElementById('res-skor').innerText = skorAkhir.toFixed(1);
+
+            // Pindah ke halaman hasil
+            document.getElementById('exam-page').classList.add('hidden');
+            document.getElementById('result-page').classList.remove('hidden');
+            
+            // Scroll otomatis ke atas halaman hasil
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+    </script>
+</body>
+</html>
